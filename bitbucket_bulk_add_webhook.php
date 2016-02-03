@@ -93,3 +93,5 @@ foreach ($slugsArray as $slug)
         echo "[OK] " . $teamname . "/$slug" . PHP_EOL;
     }
 }
+
+echo PHP_EOL . "Done! The webook is now included on " . count($slugsArray) . " repositories. Have a great day!" . PHP_EOL;
