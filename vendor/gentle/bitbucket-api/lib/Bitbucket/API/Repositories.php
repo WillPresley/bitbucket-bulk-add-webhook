@@ -51,7 +51,6 @@ class Repositories extends Api
             while (!empty($nextPage)) {
 
                 $params = array();
-
                 $params['page']= $thisPage;
 
                 $next = $this->getClient()->setApiVersion('2.0')->get($endpoint, $params );
@@ -71,7 +70,6 @@ class Repositories extends Api
 
         } else {
             $params = array();
-
             $params['pagelen'] = 100;
 
             return $this->getClient()->setApiVersion('2.0')->get($endpoint, $params );
