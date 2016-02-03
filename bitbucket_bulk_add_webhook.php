@@ -22,44 +22,48 @@ class CONFIG
 
 require_once __DIR__.'/vendor/autoload.php';
 
+$bb_user = CONFIG::BITBUCKET_USER;
+$bb_pass = CONFIG::BITBUCKET_PASSWORD;
+$teamname = CONFIG::BITBUCKET_ACCOUNT; // If User == Account/Team, just set teamname = bb_user here.
+
 header("Content-Type: text/plain");
 
-$user = new Bitbucket\API\User();
-$user->setCredentials( new Bitbucket\API\Authentication\Basic(CONFIG::BITBUCKET_USER, CONFIG::BITBUCKET_PASSWORD) );
+$repositories = new Bitbucket\API\Repositories();
+$repositories->setCredentials( new Bitbucket\API\Authentication\Basic($bb_user, $bb_pass) );
 
-$repos = $user->repositories()->dashboard();
+$repos = $repositories->all($teamname);
 
-$reposArray = json_decode($repos->getContent());
+$reposArray = $repos;
 
 $slugsArray = array();
 
-if (isset($reposArray[0]) && isset($reposArray[0][1]) && is_array($reposArray[0][1]))
+if (isset($reposArray['values']))
 {
-    foreach($reposArray[0][1] as $repo)
+    foreach($reposArray['values'] as $repo)
     {
-        array_push($slugsArray, $repo->slug);
+        array_push($slugsArray, strtolower($repo['name']));
     }
 }
 
 $webhooks  = new Bitbucket\API\Repositories\Hooks();
 
-$webhooks->setCredentials( new Bitbucket\API\Authentication\Basic(CONFIG::BITBUCKET_USER, CONFIG::BITBUCKET_PASSWORD) );
+$webhooks->setCredentials( new Bitbucket\API\Authentication\Basic($bb_user, $bb_pass) );
 
-echo "Adding webhook " . CONFIG::WEBHOOK_NAME . " to " . count($slugsArray) . " repositories from " . CONFIG::BITBUCKET_ACCOUNT . ":" . PHP_EOL;
+echo "Adding webhook " . CONFIG::WEBHOOK_NAME . " to " . count($slugsArray) . " repositories from " . $teamname . ":" . PHP_EOL;
 
 foreach ($slugsArray as $slug)
 {
     $webhookAlreadyAdded = false;
 
-    $repositoryWebhooks = json_decode($webhooks->all(CONFIG::BITBUCKET_ACCOUNT, $slug)->getContent());
+    $repositoryWebhooks = json_decode($webhooks->all($teamname, $slug)->getContent());
     if (isset($repositoryWebhooks->values))
     {
         if (CONFIG::DELETE_ALL_PREVIOUS_WEBHOOKS)
         {
             foreach($repositoryWebhooks->values as $currentWebhook)
             {
-                $webhooks->delete(CONFIG::BITBUCKET_ACCOUNT, $slug, $currentWebhook->uuid);
-                echo "[Webhook Deleted] $currentWebhook->description ($currentWebhook->url) from " . CONFIG::BITBUCKET_ACCOUNT . "/$slug". PHP_EOL;
+                $webhooks->delete($teamname, $slug, $currentWebhook->uuid);
+                echo "[Webhook Deleted] $currentWebhook->description ($currentWebhook->url) from " . $teamname . "/$slug". PHP_EOL;
             }
         }
         else
@@ -69,7 +73,7 @@ foreach ($slugsArray as $slug)
                 if ($currentWebhook->description == CONFIG::WEBHOOK_NAME && $currentWebhook->url == CONFIG::WEBHOOK_URL && $currentWebhook->active)
                 {
                     $webhookAlreadyAdded = true;
-                    echo "[Not Needed] Webhook already installed on " . CONFIG::BITBUCKET_ACCOUNT . "/$slug" . PHP_EOL;
+                    echo "[Not Needed] Webhook already installed on " . $teamname . "/$slug" . PHP_EOL;
                     break;
                 }
             }
@@ -78,7 +82,7 @@ foreach ($slugsArray as $slug)
 
     if (!$webhookAlreadyAdded)
     {
-        $webhooks->create(CONFIG::BITBUCKET_ACCOUNT, $slug, array(
+        $webhooks->create($teamname, $slug, array(
             'description' => CONFIG::WEBHOOK_NAME,
             'url' => CONFIG::WEBHOOK_URL,
             'active' => true,
@@ -86,6 +90,6 @@ foreach ($slugsArray as $slug)
                 'repo:push',
             )
         ));
-        echo "[OK] " . CONFIG::BITBUCKET_ACCOUNT . "/$slug" . PHP_EOL;
+        echo "[OK] " . $teamname . "/$slug" . PHP_EOL;
     }
 }
