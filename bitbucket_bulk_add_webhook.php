@@ -94,4 +94,4 @@ foreach ($slugsArray as $slug)
     }
 }
 
-echo PHP_EOL . "Done! The webook is now included on " . count($slugsArray) . " repositories. Have a great day!" . PHP_EOL;
+echo PHP_EOL . "Done! The webhook is now included on " . count($slugsArray) . " repositories. Have a great day!" . PHP_EOL;
