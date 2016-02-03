@@ -38,8 +38,44 @@ class Repositories extends Api
 
         if (!is_null($owner)) {
             $endpoint = sprintf('repositories/%s', $owner);
-        }
 
-        return $this->getClient()->setApiVersion('2.0')->get($endpoint);
+            $data = $this->getClient()->setApiVersion('2.0')->get($endpoint);
+
+            $dataArray = json_decode($data->getContent(), true);
+
+            $nextPage = (isset($dataArray['next'])) ? $dataArray['next'] : null;
+
+            $thisPage = 1;
+
+            // Get paginated data & merge with original data
+            while (!empty($nextPage)) {
+
+                $params = array();
+
+                $params['page']= $thisPage;
+
+                $next = $this->getClient()->setApiVersion('2.0')->get($endpoint, $params );
+
+                $nextArray = json_decode($next->getContent(), true);
+
+                foreach ($nextArray['values'] as $item) {
+                    $dataArray['values'][] = $item;
+                }
+
+                $thisPage++;
+
+                $nextPage = (isset($nextArray['next'])) ? $nextArray['next'] : null;
+            }
+
+            return $dataArray;
+
+        } else {
+            $params = array();
+
+            $params['pagelen'] = 100;
+
+            return $this->getClient()->setApiVersion('2.0')->get($endpoint, $params );
+
+        }
     }
 }
