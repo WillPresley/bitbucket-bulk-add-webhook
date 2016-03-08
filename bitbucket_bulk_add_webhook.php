@@ -7,7 +7,9 @@ class CONFIG
     /** Bitbucket user password, used to authenticate. */
     CONST BITBUCKET_PASSWORD = 'yd8ajd82hd';
 
-    /** Bitbucket account that holds the repositories. Most of time it's the same as BITBUCKET_USER. */
+    /** Bitbucket account that holds the repositories.
+        Most of time it's the same as BITBUCKET_USER, if so, just set them to the same thing.
+        **IF YOU ARE USING A TEAM**, this is where you want to put the account name */
     CONST BITBUCKET_ACCOUNT = 'BigBangBusiness';
 
     /** Name of the webhook to be added. */
@@ -24,7 +26,7 @@ require_once __DIR__.'/vendor/autoload.php';
 
 $bb_user = CONFIG::BITBUCKET_USER;
 $bb_pass = CONFIG::BITBUCKET_PASSWORD;
-$teamname = CONFIG::BITBUCKET_ACCOUNT; // If User == Account/Team, just set teamname = bb_user here.
+$teamname = CONFIG::BITBUCKET_ACCOUNT; // Do not remove! Even if repos are NOT in a team, simply set them to the same thing in the Config class above
 
 header("Content-Type: text/plain");
 
