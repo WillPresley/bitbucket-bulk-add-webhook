@@ -22,6 +22,10 @@ class CONFIG
     CONST DELETE_ALL_PREVIOUS_WEBHOOKS = false;
 }
 
+/** Whether to run the script semi-quietly (only showing changes) **/
+$semi_silent = false;
+if ($argv[1] === "true") $semi_silent = true;
+
 require_once __DIR__.'/vendor/autoload.php';
 
 $bb_user = CONFIG::BITBUCKET_USER;
@@ -51,7 +55,9 @@ $webhooks  = new Bitbucket\API\Repositories\Hooks();
 
 $webhooks->setCredentials( new Bitbucket\API\Authentication\Basic($bb_user, $bb_pass) );
 
-echo "Adding webhook " . CONFIG::WEBHOOK_NAME . " to " . count($slugsArray) . " repositories from " . $teamname . ":" . PHP_EOL;
+if ( !$semi_silent ) {
+    echo "Adding webhook " . CONFIG::WEBHOOK_NAME . " to " . count($slugsArray) . " repositories from " . $teamname . ":" . PHP_EOL;
+}
 
 foreach ($slugsArray as $slug)
 {
@@ -75,8 +81,11 @@ foreach ($slugsArray as $slug)
                 if ($currentWebhook->description == CONFIG::WEBHOOK_NAME && $currentWebhook->url == CONFIG::WEBHOOK_URL && $currentWebhook->active)
                 {
                     $webhookAlreadyAdded = true;
-                    echo "[Not Needed] Webhook already installed on " . $teamname . "/$slug" . PHP_EOL;
-                    break;
+
+                    if ( !$semi_silent ) {
+                        echo "[Not Needed] Webhook already installed on " . $teamname . "/$slug" . PHP_EOL;
+                        break;
+                    }
                 }
             }
         }
